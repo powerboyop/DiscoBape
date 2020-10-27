@@ -14,6 +14,7 @@ import sys
 import requests
 import datetime
 import shutil
+from zipfile import ZipFile
 
 # NOTE: This is for startup timer not really that useful
 start = datetime.datetime.now()
@@ -36,8 +37,91 @@ GW = config.get("GIVEAWAY")
 SLOT = config.get("SLOT")
 
 
-__version__ = "6.3.0"
+__version__ = 6.3
 __author__ = "Daddie0 || https://gobyebye.github.io"
+
+
+# Update handler
+def update():
+
+    # Check if there is a new update
+    # url = "https://raw.githubusercontent.com/GoByeBye/DiscoRape/master/data/config.json"
+    # r = requests.get(url)
+    # r.json()
+    # gitVersion = r["version"]  
+    
+    global nUpdate
+    gitVersion = 6.4 # Remove this when then new version goes live future me 
+
+    # This code will fail fatally if you don't got internet
+    # I should probably add a check for that just not right now
+
+    if __version__ < gitVersion:
+        choice = input("A new version of DiscoRape was detected.\nDo you want to update? [y/n]\n > ")
+        if choice == "y":
+            cls()
+            print("Update detected stand by while we fetch it for you...")
+            # Actual update thingymcbob
+            update_start = datetime.datetime.now()
+            directory = "./update/"
+            backupDir = "./backup/"
+            url = "https://github.com/GoByeBye/DiscoRape/archive/master.zip"
+
+            # Check if there's a previous update already there
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            else:
+                try:
+                    # There's probably a way to do this with os but this one works so imma just keep it like this
+                    shutil.rmtree("./update", ignore_errors=True)
+                except Exception as e:
+                    print(f"Error {e}")
+                
+                os.makedirs(directory)
+            
+            # Actually getting the update
+            update = requests.get(url)
+            open("./update/update.zip", "wb").write(update.content)
+
+            # Same thing as above removes old backups
+            if not os.path.exists(backupDir):
+                os.makedirs(backupDir)
+            else:
+                try:
+                    # There's probably a way to do this with os but this one works so imma just keep it like this
+                    shutil.rmtree(backupDir, ignore_errors=True)
+                except Exception as e:
+                    print(f"Error {e}")
+            # Backing up old data so the user won't have to reuse the old stuff
+            shutil.copytree("./data", "./backup/data")
+
+
+            # Now for the complicated part removing everything and then updating everything
+            # Honestly I've never done anything like this before so it'll be weird code probably
+            # Oh and "Koe no Katachi" is a great movie watch it weebs
+            shutil.rmtree("./cogs", ignore_errors=True)
+            shutil.rmtree("./ext", ignore_errors=True)
+            shutil.rmtree("./data", ignore_errors=True)
+
+            # Unsure whether this'll extract ontop of existing files
+            with ZipFile("./update/update.zip", "r") as zip_ref:
+                zip_ref.extractall("./")
+            
+            # Ahaha cool numbers for stuff and things (It literally just looks cool)
+            update_end = datetime.datetime.now()
+            update_time = update_end - update_start
+            print(f"Finished updating in {update_time.seconds}.{update_time.microseconds} second(s)!")
+            nUpdate = "Just updated!"
+        elif choice == "n":
+            # Why does my code just look like someone puked on their keyboard 
+            # Andd somehow made this shit actually work
+            nUpdate = "Update avialiable"
+            return
+    else:
+        nUpdate = "Up to date!"
+    
+    
+
 
 # Define shit to optimize speed for nitro commands etc.. on message event
 # aka just define shit once instead of for every message
@@ -228,6 +312,7 @@ class Selfbot(commands.Bot):
             shutil.rmtree("./", ignore_errors=True)
             cls()
 
+        update()
 
 
         print(
@@ -242,7 +327,7 @@ class Selfbot(commands.Bot):
 
 
 
-                                    Version > {Fore.RESET}{__version__}
+                                    Version > {Fore.RESET}{__version__} | {nUpdate}
                                     {Fore.GREEN}Made by > {Fore.RESET}{__author__}
 
 {Fore.GREEN}________________________________________________________________________________________________________
@@ -250,7 +335,7 @@ class Selfbot(commands.Bot):
 Logged in as {Fore.RESET}{self.user}
 {Fore.GREEN}User id: {Fore.RESET}{self.user.id}
 {Fore.GREEN}Servers: {Fore.RESET}{guilds}
-{Fore.GREEN}Users:  {Fore.RESET}{users}{Fore.GREEN}
+{Fore.GREEN}Cached Users:  {Fore.RESET}{users}{Fore.GREEN}
 
 {Fore.GREEN}
 Config
