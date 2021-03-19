@@ -22,7 +22,7 @@ mypy-extensions==0.4.3
 nekos.py==1.0.3
 numpy==1.19.2
 pathspec==0.8.0
-Pillow==8.0.0
+Pillow==8.1.1
 proglog==0.1.9
 psutil==5.7.2
 pyfiglet==0.8.post1
